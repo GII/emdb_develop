@@ -1,10 +1,10 @@
-[submodule "emdb_cognitive_nodes_gii"]
-	path = emdb_cognitive_nodes_gii
-	url = https://github.com/GII/emdb_cognitive_nodes_gii.git
-	branch = bartender_experiment
 [submodule "emdb_core"]
 	path = emdb_core
 	url = https://github.com/GII/emdb_core.git
+	branch = bartender_experiment
+[submodule "emdb_cognitive_nodes_gii"]
+	path = emdb_cognitive_nodes_gii
+	url = https://github.com/GII/emdb_cognitive_nodes_gii.git
 	branch = bartender_experiment
 [submodule "emdb_discrete_event_simulator_gii"]
 	path = emdb_discrete_event_simulator_gii

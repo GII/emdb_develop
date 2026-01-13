@@ -1,0 +1,41 @@
+name: Update submodules
+
+on:
+  schedule:
+    # Cada viernes a las 03:00 UTC (ajusta si quieres otra hora/día)
+    - cron: '0 3 * * FRI'
+  workflow_dispatch:  # permitir lanzarlo a mano desde la pestaña Actions
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout meta repo with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true          # clona también los submódulos
+          fetch-depth: 0            # necesario para poder hacer push correctamente
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update submodules to latest branches
+        run: |
+          git submodule update --init --recursive
+          # Usa la rama indicada en .gitmodules (campo 'branch') para cada submódulo
+          git submodule update --recursive --remote
+
+      - name: Commit and push if there are changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! git diff --quiet; then
+            git add .
+            git commit -m "CI: auto-update submodules to latest branches"
+            git push
+          else
+            echo "No changes in submodules."
+          fi

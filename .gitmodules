@@ -1,7 +1,7 @@
 [submodule "emdb_core"]
 	path = emdb_core
 	url = https://github.com/GII/emdb_core.git
-	branch = sac_policy_learning
+	branch = Dreaming
 [submodule "emdb_cognitive_nodes_gii"]
 	path = emdb_cognitive_nodes_gii
 	url = https://github.com/GII/emdb_cognitive_nodes_gii.git

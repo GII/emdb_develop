@@ -2,40 +2,63 @@ name: Update submodules
 
 on:
   schedule:
-    # Cada viernes a las 03:00 UTC (ajusta si quieres otra hora/día)
     - cron: '0 3 * * FRI'
-  workflow_dispatch:  # permitir lanzarlo a mano desde la pestaña Actions
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: "Comma-separated branches to update"
+        required: false
+        default: "main,dev"
 
 jobs:
   update-submodules:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout meta repo with submodules
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: true          # clona también los submódulos
-          fetch-depth: 0            # necesario para poder hacer push correctamente
+          fetch-depth: 0
+          submodules: true
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Update submodules to latest branches
+      - name: Determine branches
+        id: vars
+        shell: bash
         run: |
-          git submodule update --init --recursive
-          # Usa la rama indicada en .gitmodules (campo 'branch') para cada submódulo
-          git submodule update --recursive --remote
-
-      - name: Commit and push if there are changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if ! git diff --quiet; then
-            git add .
-            git commit -m "CI: auto-update submodules to latest branches"
-            git push
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.branches }}" ]; then
+            echo "branches=${{ inputs.branches }}" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes in submodules."
+            echo "branches=main,dev" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Update submodules on each branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IFS=',' read -ra BRANCHES <<< "${{ steps.vars.outputs.branches }}"
+
+          for BR in "${BRANCHES[@]}"; do
+            BR="$(echo "$BR" | xargs)"
+            echo "Updating branch: $BR"
+
+            git fetch origin "$BR":"$BR" || git fetch origin "$BR"
+            git checkout "$BR"
+
+            git submodule sync --recursive
+            git submodule update --init --recursive
+            git submodule update --remote --recursive
+
+            if ! git diff --quiet; then
+              git add .
+              git commit -m "CI: auto-update submodules to latest branches on $BR"
+              git push origin "$BR"
+            else
+              echo "No changes in submodules on $BR"
+            fi
+          done

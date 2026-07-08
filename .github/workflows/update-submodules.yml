@@ -8,7 +8,7 @@ on:
       branches:
         description: "Comma-separated branches to update"
         required: false
-        default: "main,dev"
+        default: "main,Dreaming"
 
 jobs:
   update-submodules:
